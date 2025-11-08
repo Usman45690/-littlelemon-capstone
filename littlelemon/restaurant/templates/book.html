@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Book a Table</h2>
+<form id="bookingForm">
+    <div>
+        <label for="firstName">First Name:</label>
+        <input type="text" id="firstName" name="firstName" required>
+    </div>
+    <div>
+        <label for="reservationDate">Reservation Date:</label>
+        <input type="date" id="reservationDate" name="reservationDate" required>
+    </div>
+    <div>
+        <label for="reservationSlot">Reservation Time:</label>
+        <select id="reservationSlot" name="reservationSlot" required>
+            <option value="">Select a time</option>
+        </select>
+    </div>
+    <button type="submit">Book Table</button>
+</form>
+<div id="message"></div>
+<h3>Current Reservations</h3>
+<div id="reservations"></div>
+
+<script>
+    // Set current date as default
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('reservationDate').value = today;
+    
+    // Load available slots when date changes
+    document.getElementById('reservationDate').addEventListener('change', loadAvailableSlots);
+    
+    // Load reservations for current date
+    loadReservations(today);
+    
+    // Load available slots for current date
+    loadAvailableSlots();
+    
+    // Handle form submission
+    document.getElementById('bookingForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        submitBooking();
+    });
+    
+    function loadAvailableSlots() {
+        const date = document.getElementById('reservationDate').value;
+        if (!date) return;
+        
+        fetch(`/api/available_slots/?date=${date}`)
+            .then(response => response.json())
+            .then(data => {
+                const slotSelect = document.getElementById('reservationSlot');
+                slotSelect.innerHTML = '<option value="">Select a time</option>';
+                
+                if (data.available_slots) {
+                    data.available_slots.forEach(slot => {
+                        const option = document.createElement('option');
+                        option.value = slot;
+                        option.textContent = `${slot}:00`;
+                        slotSelect.appendChild(option);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error loading available slots:', error);
+            });
+    }
+    
+    function submitBooking() {
+        const firstName = document.getElementById('firstName').value;
+        const reservationDate = document.getElementById('reservationDate').value;
+        const reservationSlot = document.getElementById('reservationSlot').value;
+        
+        if (!firstName || !reservationDate || !reservationSlot) {
+            document.getElementById('message').innerHTML = '<p style="color: red;">Please fill all fields</p>';
+            return;
+        }
+        
+        const bookingData = {
+            first_name: firstName,
+            reservation_date: reservationDate,
+            reservation_slot: parseInt(reservationSlot)
+        };
+        
+        fetch('/api/submit_booking/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(bookingData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                document.getElementById('message').innerHTML = `<p style="color: red;">${data.error}</p>`;
+            } else {
+                document.getElementById('message').innerHTML = '<p style="color: green;">Booking successful!</p>';
+                document.getElementById('bookingForm').reset();
+                document.getElementById('reservationDate').value = reservationDate;
+                loadAvailableSlots();
+                loadReservations(reservationDate);
+            }
+        })
+        .catch(error => {
+            document.getElementById('message').innerHTML = `<p style="color: red;">Error: ${error}</p>`;
+        });
+    }
+    
+    function loadReservations(date) {
+        fetch(`/api/bookings/?date=${date}`)
+            .then(response => response.json())
+            .then(data => {
+                const reservationsDiv = document.getElementById('reservations');
+                if (data.length === 0) {
+                    reservationsDiv.innerHTML = '<p>No bookings for this date</p>';
+                } else {
+                    let html = '<ul>';
+                    data.forEach(booking => {
+                        html += `<li>${booking.first_name} - ${booking.reservation_date} at ${booking.reservation_slot}:00</li>`;
+                    });
+                    html += '</ul>';
+                    reservationsDiv.innerHTML = html;
+                }
+            })
+            .catch(error => {
+                console.error('Error loading reservations:', error);
+            });
+    }
+    
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+{% endblock %}

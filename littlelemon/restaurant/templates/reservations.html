@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>All Reservations</h2>
+<div id="reservations"></div>
+
+<script>
+    fetch('/api/bookings/')
+        .then(response => response.json())
+        .then(data => {
+            const reservationsDiv = document.getElementById('reservations');
+            if (data.length === 0) {
+                reservationsDiv.innerHTML = '<p>No bookings found</p>';
+            } else {
+                // Display as JSON
+                reservationsDiv.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading reservations:', error);
+            document.getElementById('reservations').innerHTML = '<p>Error loading reservations</p>';
+        });
+</script>
+{% endblock %}

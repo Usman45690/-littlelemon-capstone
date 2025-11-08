@@ -1,0 +1,43 @@
+Little Lemon Booking Form Project
+=================================
+
+Project Structure:
+- Project directory: littlelemon
+- App name: restaurant
+
+Database Configuration:
+- Database: SQLite (db.sqlite3 file included)
+
+Superuser Credentials:
+- Username: admin
+- Password: admin123
+
+How to run the project:
+1. Install dependencies using pipenv:
+   cd littlelemon
+   pipenv install
+2. Run migrations (already applied):
+   python manage.py migrate
+3. Start the development server:
+   python manage.py runserver
+
+Booking Form Features:
+1. First name field
+2. Reservation date field with date selector
+3. Reservation time slot selection (10:00-22:00)
+4. Duplicate booking prevention
+5. Real-time available slots display
+6. Current reservations display
+7. JSON API for bookings
+
+API Endpoints:
+- GET /api/bookings/ - Get all bookings
+- GET /api/bookings/?date=YYYY-MM-DD - Get bookings for a specific date
+- POST /api/submit_booking/ - Submit a new booking
+- GET /api/available_slots/?date=YYYY-MM-DD - Get available time slots for a date
+
+Pages:
+- /book/ - Booking form page
+- /reservations/ - All reservations in JSON format
+
+The project includes the SQLite database file (db.sqlite3) with the necessary tables already created.
