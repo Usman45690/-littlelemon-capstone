@@ -1,2 +1,6 @@
 Django>=5.2.7
+djangorestframework>=3.14.0
+djoser>=2.2.0
 mysqlclient>=2.2.7
+django-filter>=23.2
+Pillow>=10.0.0
